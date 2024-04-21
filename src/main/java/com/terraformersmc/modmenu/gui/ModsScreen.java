@@ -5,8 +5,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.terraformersmc.modmenu.ModMenu;
 import com.terraformersmc.modmenu.config.ModMenuConfig;
 import com.terraformersmc.modmenu.config.ModMenuConfigManager;
+import com.terraformersmc.modmenu.config.option.ConfigOptionStorage;
 import com.terraformersmc.modmenu.gui.widget.DescriptionListWidget;
 import com.terraformersmc.modmenu.gui.widget.LegacyTexturedButtonWidget;
+import com.terraformersmc.modmenu.gui.widget.LegacyTogglableTexturedButtonWidget;
 import com.terraformersmc.modmenu.gui.widget.ModListWidget;
 import com.terraformersmc.modmenu.gui.widget.entries.ModListEntry;
 import com.terraformersmc.modmenu.util.DrawingUtil;
@@ -23,10 +25,8 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.render.*;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.toast.SystemToast;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Text;
@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
 public class ModsScreen extends Screen {
 	private static final Identifier FILTERS_BUTTON_LOCATION = new Identifier(ModMenu.MOD_ID, "textures/gui/filters_button.png");
 	private static final Identifier CONFIGURE_BUTTON_LOCATION = new Identifier(ModMenu.MOD_ID, "textures/gui/configure_button.png");
+	private static final Identifier FAVORITE_BUTTON_LOCATION = new Identifier(ModMenu.MOD_ID, "textures/gui/favorite_button.png");
 
 	private static final Logger LOGGER = LoggerFactory.getLogger("Mod Menu | ModsScreen");
 	private final Screen previousScreen;
@@ -72,6 +73,7 @@ public class ModsScreen extends Screen {
 	private ClickableWidget librariesButton;
 	private ModListWidget modList;
 	private @Nullable ClickableWidget configureButton;
+	private LegacyTogglableTexturedButtonWidget favoriteButton;
 	private ClickableWidget websiteButton;
 	private ClickableWidget issuesButton;
 	private DescriptionListWidget descriptionListWidget;
@@ -195,12 +197,35 @@ public class ModsScreen extends Screen {
 					button.active = false;
 				}
 			})
-					.position(width - 24, RIGHT_PANE_Y)
+					.position(width - 46, RIGHT_PANE_Y)
 					.size(20, 20)
 					.uv(0, 0, 20)
 					.texture(CONFIGURE_BUTTON_LOCATION, 32, 64)
 					.build();
 		}
+
+		// Favorites button
+		this.favoriteButton = LegacyTogglableTexturedButtonWidget.legacyTogglableTexturedBuilder(ScreenTexts.EMPTY, button -> {
+			final String id = Objects.requireNonNull(selected).getMod().getId();
+
+			this.favoriteButton.toggle();
+
+			Set<String> favoriteMods = ConfigOptionStorage.getStringSet("favorite_mods");
+
+			if (this.favoriteButton.isToggled()) {
+				favoriteMods.add(id);
+			} else {
+				favoriteMods.remove(id);
+			}
+
+			ConfigOptionStorage.setStringSet("favorite_mods", favoriteMods);
+		})
+			.position(width - 24, RIGHT_PANE_Y)
+			.size(20, 20)
+			.uv(0, 0, 20, 20)
+			.texture(FAVORITE_BUTTON_LOCATION, 64, 64)
+			.toggled(false)
+			.build();
 
 		// Website button
 		int urlButtonWidths = this.paneWidth / 2 - 2;
@@ -247,6 +272,7 @@ public class ModsScreen extends Screen {
 
 		// Done button
 		this.doneButton = ButtonWidget.builder(ScreenTexts.DONE, button -> {
+			ModMenuConfigManager.save();
 			client.setScreen(previousScreen);
 		})
 				.position(this.width / 2 + 4, this.height - 28)
@@ -273,6 +299,7 @@ public class ModsScreen extends Screen {
 			this.addDrawableChild(this.configureButton);
 		}
 
+		this.addDrawableChild(this.favoriteButton);
 		this.addDrawableChild(this.websiteButton);
 		this.addDrawableChild(this.issuesButton);
 		this.addSelectableChild(this.descriptionListWidget);
@@ -411,6 +438,7 @@ public class ModsScreen extends Screen {
 
 	@Override
 	public void close() {
+		ModMenuConfigManager.save();
 		this.modList.close();
 		this.client.setScreen(this.previousScreen);
 	}
@@ -443,6 +471,10 @@ public class ModsScreen extends Screen {
 					this.configureButton.setTooltip(Tooltip.of(ModMenuScreenTexts.CONFIGURE));
 				}
 			}
+
+			this.favoriteButton.visible = true;
+			this.favoriteButton.active = true;
+			this.favoriteButton.setToggled(ConfigOptionStorage.getStringSet("favorite_mods").contains(selected.getMod().getId()));
 
 			this.websiteButton.visible = true;
 			this.websiteButton.active = selected.getMod().getWebsite() != null;

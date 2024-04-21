@@ -7,14 +7,14 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public class LegacyTexturedButtonWidget extends TexturedButtonWidget {
-	private final int u;
-	private final int v;
-	private final int hoveredVOffset;
+	protected final int u;
+	protected final int v;
+	protected final int hoveredVOffset;
 
-	private final Identifier texture;
+	protected final Identifier texture;
 
-	private final int textureWidth;
-	private final int textureHeight;
+	protected final int textureWidth;
+	protected final int textureHeight;
 
 	public LegacyTexturedButtonWidget(int x, int y, int width, int height, int u, int v, int hoveredVOffset, Identifier texture, int textureWidth, int textureHeight, ButtonWidget.PressAction pressAction, Text message) {
 		super(x, y, width, height, null, pressAction, message);

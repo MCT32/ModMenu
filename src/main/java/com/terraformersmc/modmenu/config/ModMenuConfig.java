@@ -44,6 +44,7 @@ public class ModMenuConfig {
 	public static final BooleanConfigOption UPDATE_CHECKER = new BooleanConfigOption("update_checker", true);
 	public static final BooleanConfigOption BUTTON_UPDATE_BADGE = new BooleanConfigOption("button_update_badge", true);
 	public static final BooleanConfigOption QUICK_CONFIGURE = new BooleanConfigOption("quick_configure", true);
+	public static final StringSetConfigOption FAVORITE_MODS = new StringSetConfigOption("favorite_mods", new HashSet<>());
 
 	public static SimpleOption<?>[] asOptions() {
 		ArrayList<SimpleOption<?>> options = new ArrayList<>();
@@ -56,6 +57,7 @@ public class ModMenuConfig {
 					&& !field.getName().equals("MODIFY_GAME_MENU")
 					&& !field.getName().equals("CONFIG_MODE")
 					&& !field.getName().equals("DISABLE_DRAG_AND_DROP")
+					&& !field.getName().equals("FAVORITE_MODS")
 			) {
 				try {
 					options.add(((OptionConvertable) field.get(null)).asOption());
